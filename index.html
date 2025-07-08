@@ -4,27 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ATR-66 PLC – Tarjeta</title>
-  <!-- Fuente opcional para un look más limpio -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-  <!-- Íconos de Font Awesome (solo para el certificado) -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    integrity="sha512-pB4TO9rZcXq1vyWryh4Q/5Z27VUsvoCYywuJI+g5IWrhW0cPhu7AfMu8Ilo0MejMnqpQGbQSQjhWnZpDX9y9dg=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
   <style>
     :root {
-      --primary: #0d6efd;            /* Azul principal (badge, bordes)   */
-      --success: #059669;            /* Verde fecha mantenimiento        */
-      --bullet:  #f97316;            /* Naranja balas lista              */
-      --text:    #0f172a;            /* Gris oscuro títulos/valores      */
-      --muted:   #475569;            /* Gris labels                      */
-      --card-bg: #ffffff;            /* Fondo tarjeta                    */
-      --body-bg: #f7f9fc;            /* Fondo página                     */
+      --primary: #0d6efd;
+      --success: #059669;
+      --bullet: #f97316;
+      --text: #0f172a;
+      --muted: #475569;
+      --card-bg: #ffffff;
+      --body-bg: #f7f9fc;
     }
 
     * { box-sizing: border-box; }
@@ -38,54 +29,53 @@
       font-family: "Inter", system-ui, sans-serif;
     }
 
-    /* ---------- Tarjeta ---------- */
+    /* Tarjeta - Aumenté el ancho para el logo */
     .card {
-      position: relative;
-      width: 380px;
+      width: 420px;
       padding: 24px;
       border-radius: 18px;
       background: var(--card-bg);
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
     }
 
+    /* Logo a todo el ancho */
+    .logo-empresa {
+      width: 100%;
+      height: auto;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      object-fit: contain;
+    }
+
+    /* Encabezado con título y badge */
+    .card-header {
+      position: relative;
+      margin-bottom: 16px;
+    }
     .card h1 {
       font-size: 28px;
       font-weight: 700;
-      margin: 0 0 8px 0;
+      margin: 0;
       color: var(--text);
     }
-
-    /* Badge con el número */
     .badge {
       position: absolute;
-      top: 24px;
-      right: 24px;
+      top: 0;
+      right: 0;
       background: var(--primary);
       color: #fff;
       padding: 4px 14px;
       border-radius: 8px;
       font-weight: 600;
-      font-size: 15px;
     }
 
-    hr {
-      border: none;
-      border-top: 1px solid #e2e8f0;
-      margin: 18px 0;
-    }
-
-    .label {
-      color: var(--muted);
-      font-weight: 500;
-    }
-
-    .value {
-      font-weight: 600;
-      color: var(--text);
-    }
+    /* Contenido */
+    hr { border: none; border-top: 1px solid #e2e8f0; margin: 18px 0; }
+    .label { color: var(--muted); font-weight: 500; }
+    .value { font-weight: 600; color: var(--text); }
     .value.success { color: var(--success); }
 
-    /* Lista de equipos */
+    /* Lista */
     .list {
       list-style: none;
       padding: 0;
@@ -93,7 +83,6 @@
     }
     .list li {
       display: flex;
-      align-items: flex-start;
       gap: 8px;
       margin-bottom: 6px;
     }
@@ -104,24 +93,26 @@
       line-height: 1.6;
     }
 
-    /* Botones inferiores */
+    /* Botones (4 en 2 filas) */
     .card-footer {
       display: flex;
-      gap: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
       margin-top: 22px;
     }
     .btn {
       flex: 1;
+      min-width: calc(50% - 5px);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 10px 12px;
+      gap: 8px;
+      padding: 10px;
       font-size: 14px;
       font-weight: 600;
       border-radius: 10px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
       text-decoration: none;
     }
     .btn-primary {
@@ -130,7 +121,6 @@
       border: none;
     }
     .btn-primary:hover { filter: brightness(1.1); }
-
     .btn-outline {
       background: transparent;
       color: var(--primary);
@@ -142,21 +132,29 @@
 <body>
 
   <article class="card" role="group" aria-labelledby="title-atr">
-    <h1 id="title-atr">ATR-66 PLC</h1>
-    <span class="badge">959312882</span>
+    <!-- Logo a todo el ancho -->
+    <img 
+      src="https://github.com/racsito/presentacion/blob/main/logo.jpg" 
+      alt="Logo Empresa" 
+      class="logo-empresa"
+    >
 
+    <!-- Encabezado -->
+    <div class="card-header">
+      <h1 id="title-atr">ATR-66 PLC</h1>
+      <span class="badge">959312882</span>
+    </div>
+
+    <!-- Contenido existente -->
     <p class="label">
       Último mantenimiento:
       <span class="value success">15/06/2025</span>
     </p>
-
     <p class="label">
       PakBus:
       <span class="value">784</span>
     </p>
-
     <hr />
-
     <p class="label">Equipos instalados:</p>
     <ul class="list">
       <li>Rut xxxxxxxx</li>
@@ -165,17 +163,21 @@
       <li>batería 12V 18Ah</li>
       <li>Controlador solar</li>
     </ul>
-
     <hr />
 
+    <!-- 4 Botones de descarga -->
     <div class="card-footer">
-      <a href="https://ucsmedu-my.sharepoint.com/:u:/g/personal/oscar_taco_ucsm_edu_pe/EUvOdjcpy1lGvlc0jXHiThoBnTgXdvmCUTWOxramrY5IyQ?e=mSnQ0m" class="btn btn-outline" class="btn btn-primary">
-        <i class="fa-solid fa-file-contract"></i>
-        Certificado de calibración
+      <a href="https://ucsmedu-my.sharepoint.com/:u:/g/personal/oscar_taco_ucsm_edu_pe/EUvOdjcpy1lGvlc0jXHiThoBnTgXdvmCUTWOxramrY5IyQ?e=mSnQ0m" class="btn btn-primary" download>
+        <i class="fa-solid fa-file-contract"></i> Certificado
       </a>
-      <a href="https://drive.google.com/file/d/15lV-xBULpVeQ8RBkv_-vvzUKGRkd3h8z/view?usp=drive_link" class="btn btn-outline" class="btn btn-primary">
-        <i class="fa-solid fa-file-contract"></i>
-        Diagrama de Conexiones
+      <a href="https://drive.google.com/file/d/15lV-xBULpVeQ8RBkv_-vvzUKGRkd3h8z/view?usp=drive_link" class="btn btn-outline" download>
+        <i class="fa-solid fa-diagram-project"></i> Diagrama
+      </a>
+      <a href="#" class="btn btn-outline" download>
+        <i class="fa-solid fa-book"></i> Manual
+      </a>
+      <a href="#" class="btn btn-outline" download>
+        <i class="fa-solid fa-gears"></i> Especificaciones
       </a>
     </div>
   </article>
