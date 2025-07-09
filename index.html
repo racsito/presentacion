@@ -4,10 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ATR-66 PLC – Tarjeta</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
   <style>
     :root {
       --primary: #0d6efd;
@@ -166,6 +164,12 @@
 
   <script>
     let modoEdicion = false;
+    const links = {
+      certificado: "#",
+      diagrama: "#",
+      manual: "#",
+      especificaciones: "#"
+    };
 
     window.onload = function () {
       const campos = ["nombre-plc", "numero-plc", "pakbus", "ultimo-mantenimiento"];
@@ -183,14 +187,42 @@
         "batería 12V 18Ah",
         "Controlador solar"
       ]);
+
+      // Cargar links
+      for (let key in links) {
+        const guardado = localStorage.getItem("link_" + key);
+        if (guardado) links[key] = guardado;
+        document.getElementById("btn-" + key).href = links[key];
+      }
     };
 
     function toggleModoEdicion() {
       modoEdicion = !modoEdicion;
+
       document.querySelectorAll(".edit-btn, .del-btn").forEach(btn =>
         btn.classList.toggle("visible", modoEdicion)
       );
       document.getElementById("add-equipo-btn").style.display = modoEdicion ? "inline" : "none";
+
+      if (modoEdicion) {
+        for (let key in links) {
+          document.getElementById("btn-" + key).onclick = function (e) {
+            e.preventDefault();
+            const nuevo = prompt(`Ingrese el enlace para ${key}:`, links[key]);
+            if (nuevo && nuevo.trim().startsWith("http")) {
+              links[key] = nuevo.trim();
+              e.target.href = links[key];
+            }
+          };
+        }
+      } else {
+        // Restaurar comportamiento de enlaces
+        for (let key in links) {
+          const btn = document.getElementById("btn-" + key);
+          btn.onclick = null;
+          btn.href = links[key];
+        }
+      }
     }
 
     function editarCampo(id) {
@@ -243,7 +275,7 @@
 
     function obtenerEquipos() {
       return Array.from(document.querySelectorAll("#lista-equipos li"))
-        .slice(0, -1) // Excluir botón Agregar
+        .slice(0, -1)
         .map(li => li.childNodes[0].nodeValue.trim());
     }
 
@@ -259,6 +291,11 @@
       });
 
       localStorage.setItem("lista-equipos", JSON.stringify(obtenerEquipos()));
+
+      for (let key in links) {
+        localStorage.setItem("link_" + key, links[key]);
+      }
+
       alert("✅ Cambios guardados correctamente.");
     }
   </script>
@@ -266,8 +303,7 @@
 <body>
 
 <article class="card">
-  <img src="https://ceneris.com/wp-content/uploads/2021/05/logo-ceneris-300.png"
-       alt="Logo Empresa" class="logo-empresa" />
+  <img src="https://ceneris.com/wp-content/uploads/2021/05/logo-ceneris-300.png" alt="Logo Empresa" class="logo-empresa" />
 
   <div class="card-header">
     <h1 id="nombre-plc">ATR-66 PLC</h1>
@@ -276,14 +312,12 @@
     <button class="edit-btn" onclick="editarCampo('numero-plc')">✏️</button>
   </div>
 
-  <p class="label">
-    Último mantenimiento:
+  <p class="label">Último mantenimiento:
     <span class="value success" id="ultimo-mantenimiento">15/06/2025</span>
     <button class="edit-btn" onclick="editarCampo('ultimo-mantenimiento')">✏️</button>
   </p>
 
-  <p class="label">
-    PakBus:
+  <p class="label">PakBus:
     <span class="value" id="pakbus">784</span>
     <button class="edit-btn" onclick="editarCampo('pakbus')">✏️</button>
   </p>
@@ -294,10 +328,10 @@
 
   <hr />
   <div class="card-footer">
-    <a href="#" class="btn btn-primary"><i class="fa-solid fa-file-contract"></i> Certificado</a>
-    <a href="#" class="btn btn-outline"><i class="fa-solid fa-diagram-project"></i> Diagrama</a>
-    <a href="#" class="btn btn-outline"><i class="fa-solid fa-book"></i> Manual</a>
-    <a href="#" class="btn btn-outline"><i class="fa-solid fa-gears"></i> Especificaciones</a>
+    <a href="#" class="btn btn-primary" id="btn-certificado"><i class="fa-solid fa-file-contract"></i> Certificado</a>
+    <a href="#" class="btn btn-outline" id="btn-diagrama"><i class="fa-solid fa-diagram-project"></i> Diagrama</a>
+    <a href="#" class="btn btn-outline" id="btn-manual"><i class="fa-solid fa-book"></i> Manual</a>
+    <a href="#" class="btn btn-outline" id="btn-especificaciones"><i class="fa-solid fa-gears"></i> Especificaciones</a>
   </div>
 
   <button class="btn-toggle-edit" onclick="toggleModoEdicion()">✏️ Editar</button>
