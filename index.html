@@ -13,7 +13,7 @@
     :root {
       --primary: #0d6efd;
       --success: #059669;
-      --bullet:  #f97316;   /* NARANJA – usaremos también para el borde */
+      --bullet:  #f97316;
       --text:    #0f172a;
       --muted:   #475569;
       --card-bg: #ffffff;
@@ -31,19 +31,15 @@
       font-family: "Inter", system-ui, sans-serif;
     }
 
-    /* -------- Tarjeta -------- */
     .card {
       width: 420px;
       padding: 24px;
       border-radius: 18px;
       background: var(--card-bg);
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-
-      /* NUEVO: margen/borde naranja */
       border: 4px solid var(--bullet);
     }
 
-    /* Logo a todo el ancho */
     .logo-empresa {
       width: 100%;
       height: auto;
@@ -52,32 +48,42 @@
       object-fit: contain;
     }
 
-    /* Encabezado con título y badge */
-    .card-header { position: relative; margin-bottom: 16px; }
+    .card-header {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
     .card h1 {
       font-size: 28px;
       font-weight: 700;
       margin: 0;
       color: var(--text);
+      display: inline-block;
     }
+
     .badge {
-      position: absolute;
-      top: 0;
-      right: 0;
       background: var(--primary);
       color: #fff;
       padding: 4px 14px;
       border-radius: 8px;
       font-weight: 600;
+      margin-left: 10px;
     }
 
-    /* Contenido */
+    .edit-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--primary);
+      margin-left: 5px;
+    }
+
     hr { border: none; border-top: 1px solid #e2e8f0; margin: 18px 0; }
     .label { color: var(--muted); font-weight: 500; }
     .value { font-weight: 600; color: var(--text); }
     .value.success { color: var(--success); }
 
-    /* Lista */
     .list { list-style: none; padding: 0; margin: 10px 0 0; }
     .list li { display: flex; gap: 8px; margin-bottom: 6px; }
     .list li::before {
@@ -87,13 +93,13 @@
       line-height: 1.6;
     }
 
-    /* Botones (4 en 2 filas) */
     .card-footer {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       margin-top: 22px;
     }
+
     .btn {
       flex: 1;
       min-width: calc(50% - 5px);
@@ -109,6 +115,7 @@
       transition: all 0.2s;
       text-decoration: none;
     }
+
     .btn-primary { background: var(--primary); color: #fff; border: none; }
     .btn-primary:hover { filter: brightness(1.1); }
     .btn-outline {
@@ -118,11 +125,31 @@
     }
     .btn-outline:hover { background: var(--primary); color: #fff; }
   </style>
+
+  <script>
+    function editarCampo(id) {
+      const elemento = document.getElementById(id);
+      const valorActual = elemento.innerText;
+      const nuevoValor = prompt("Editar valor:", valorActual);
+      if (nuevoValor !== null && nuevoValor.trim() !== "") {
+        elemento.innerText = nuevoValor;
+      }
+    }
+
+    function editarListaEquipos() {
+      const ul = document.getElementById("lista-equipos");
+      const actual = Array.from(ul.children).map(li => li.innerText).join(", ");
+      const nuevoTexto = prompt("Editar equipos separados por comas:", actual);
+      if (nuevoTexto !== null) {
+        const items = nuevoTexto.split(",").map(e => e.trim()).filter(e => e);
+        ul.innerHTML = items.map(item => `<li>${item}</li>`).join("");
+      }
+    }
+  </script>
 </head>
 <body>
 
   <article class="card" role="group" aria-labelledby="title-atr">
-    <!-- Logo a todo el ancho -->
     <img
       src="https://ceneris.com/wp-content/uploads/2021/05/logo-ceneris-300.png"
       alt="Logo Empresa"
@@ -131,22 +158,30 @@
 
     <!-- Encabezado -->
     <div class="card-header">
-      <h1 id="title-atr">ATR-66 PLC</h1>
-      <span class="badge">959312882</span>
+      <h1 id="nombre-plc">ATR-66 PLC</h1>
+      <button class="edit-btn" onclick="editarCampo('nombre-plc')" title="Editar nombre">✏️</button>
+      <span class="badge" id="numero-plc">959312882</span>
+      <button class="edit-btn" onclick="editarCampo('numero-plc')" title="Editar número">✏️</button>
     </div>
 
-    <!-- Contenido existente -->
+    <!-- Contenido editable -->
     <p class="label">
       Último mantenimiento:
-      <span class="value success">15/06/2025</span>
+      <span class="value success" id="ultimo-mantenimiento">15/06/2025</span>
+      <button class="edit-btn" onclick="editarCampo('ultimo-mantenimiento')" title="Editar fecha">✏️</button>
     </p>
     <p class="label">
       PakBus:
-      <span class="value">784</span>
+      <span class="value" id="pakbus">784</span>
+      <button class="edit-btn" onclick="editarCampo('pakbus')" title="Editar PakBus">✏️</button>
     </p>
+
     <hr />
-    <p class="label">Equipos instalados:</p>
-    <ul class="list">
+    <p class="label">
+      Equipos instalados:
+      <button class="edit-btn" onclick="editarListaEquipos()" title="Editar equipos">✏️</button>
+    </p>
+    <ul class="list" id="lista-equipos">
       <li>Rut xxxxxxxx</li>
       <li>campbell cr 310 xxxxxxx</li>
       <li>Conversor RS485 stm4855</li>
@@ -155,7 +190,7 @@
     </ul>
     <hr />
 
-    <!-- 4 Botones de descarga -->
+    <!-- Botones -->
     <div class="card-footer">
       <a href="https://ceneris-my.sharepoint.com/:u:/p/asistente_ti/ES0F-Cf63WFKjYcChE85sqoBa2a2qX-nrqV5sqSZ-etB-g?e=uFppDr" class="btn btn-primary" download>
         <i class="fa-solid fa-file-contract"></i> Certificado
