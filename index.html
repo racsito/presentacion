@@ -144,7 +144,6 @@
   </style>
 
   <script>
-    // Cargar datos guardados al iniciar
     window.onload = function () {
       const campos = ["nombre-plc", "numero-plc", "pakbus", "ultimo-mantenimiento"];
       campos.forEach(id => {
@@ -182,6 +181,12 @@
     }
 
     function guardarCambios() {
+      const clave = prompt("Ingrese la contraseña para guardar los cambios:");
+      if (clave !== "ceneris2020") {
+        alert("❌ Contraseña incorrecta. Cambios no guardados.");
+        return;
+      }
+
       const campos = ["nombre-plc", "numero-plc", "pakbus", "ultimo-mantenimiento"];
       campos.forEach(id => {
         const valor = document.getElementById(id).innerText;
