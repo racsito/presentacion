@@ -23,12 +23,13 @@
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       background: var(--body-bg);
       font-family: "Inter", system-ui, sans-serif;
+      padding: 20px;
     }
 
     .card {
@@ -124,9 +125,43 @@
       border: 2px solid var(--primary);
     }
     .btn-outline:hover { background: var(--primary); color: #fff; }
+
+    .btn-save {
+      width: 100%;
+      background: var(--success);
+      color: #fff;
+      padding: 10px;
+      border: none;
+      margin-top: 20px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .btn-save:hover {
+      filter: brightness(1.1);
+    }
   </style>
 
   <script>
+    // Cargar datos guardados al iniciar
+    window.onload = function () {
+      const campos = ["nombre-plc", "numero-plc", "pakbus", "ultimo-mantenimiento"];
+      campos.forEach(id => {
+        const valorGuardado = localStorage.getItem(id);
+        if (valorGuardado) {
+          document.getElementById(id).innerText = valorGuardado;
+        }
+      });
+
+      const equipos = localStorage.getItem("lista-equipos");
+      if (equipos) {
+        const lista = JSON.parse(equipos);
+        document.getElementById("lista-equipos").innerHTML =
+          lista.map(item => `<li>${item}</li>`).join("");
+      }
+    };
+
     function editarCampo(id) {
       const elemento = document.getElementById(id);
       const valorActual = elemento.innerText;
@@ -144,6 +179,19 @@
         const items = nuevoTexto.split(",").map(e => e.trim()).filter(e => e);
         ul.innerHTML = items.map(item => `<li>${item}</li>`).join("");
       }
+    }
+
+    function guardarCambios() {
+      const campos = ["nombre-plc", "numero-plc", "pakbus", "ultimo-mantenimiento"];
+      campos.forEach(id => {
+        const valor = document.getElementById(id).innerText;
+        localStorage.setItem(id, valor);
+      });
+
+      const equipos = Array.from(document.getElementById("lista-equipos").children)
+                          .map(li => li.innerText);
+      localStorage.setItem("lista-equipos", JSON.stringify(equipos));
+      alert("✅ Cambios guardados correctamente.");
     }
   </script>
 </head>
@@ -205,6 +253,10 @@
         <i class="fa-solid fa-gears"></i> Especificaciones
       </a>
     </div>
+
+    <!-- Botón Guardar -->
+    <button class="btn-save" onclick="guardarCambios()">💾 Guardar cambios</button>
+
   </article>
 
 </body>
