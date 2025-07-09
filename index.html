@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ATR-66 PLC – Tarjeta</title>
 
-  <!-- Fuente & Font Awesome -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
@@ -43,14 +42,12 @@
 
     .logo-empresa {
       width: 100%;
-      height: auto;
       margin-bottom: 20px;
       border-radius: 10px;
       object-fit: contain;
     }
 
     .card-header {
-      position: relative;
       margin-bottom: 16px;
     }
 
@@ -71,13 +68,22 @@
       margin-left: 10px;
     }
 
-    .edit-btn {
+    .edit-btn, .del-btn {
+      display: none;
       background: none;
       border: none;
       cursor: pointer;
       font-size: 16px;
-      color: var(--primary);
       margin-left: 5px;
+    }
+
+    .edit-btn.visible, .del-btn.visible {
+      display: inline;
+      color: var(--primary);
+    }
+
+    .del-btn.visible {
+      color: crimson;
     }
 
     hr { border: none; border-top: 1px solid #e2e8f0; margin: 18px 0; }
@@ -86,7 +92,12 @@
     .value.success { color: var(--success); }
 
     .list { list-style: none; padding: 0; margin: 10px 0 0; }
-    .list li { display: flex; gap: 8px; margin-bottom: 6px; }
+    .list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
     .list li::before {
       content: "●";
       color: var(--bullet);
@@ -126,143 +137,172 @@
     }
     .btn-outline:hover { background: var(--primary); color: #fff; }
 
-    .btn-save {
+    .btn-save, .btn-toggle-edit {
       width: 100%;
-      background: var(--success);
-      color: #fff;
       padding: 10px;
-      border: none;
-      margin-top: 20px;
       font-weight: 600;
       border-radius: 10px;
       cursor: pointer;
+      margin-top: 15px;
+      border: none;
     }
 
-    .btn-save:hover {
-      filter: brightness(1.1);
+    .btn-save { background: var(--success); color: white; }
+    .btn-save:hover { filter: brightness(1.1); }
+
+    .btn-toggle-edit { background: var(--primary); color: white; }
+    .btn-toggle-edit:hover { filter: brightness(1.1); }
+
+    .add-btn {
+      background: none;
+      border: none;
+      font-size: 15px;
+      color: var(--primary);
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 8px;
     }
   </style>
 
   <script>
+    let modoEdicion = false;
+
     window.onload = function () {
       const campos = ["nombre-plc", "numero-plc", "pakbus", "ultimo-mantenimiento"];
       campos.forEach(id => {
-        const valorGuardado = localStorage.getItem(id);
-        if (valorGuardado) {
-          document.getElementById(id).innerText = valorGuardado;
-        }
+        const valor = localStorage.getItem(id);
+        if (valor) document.getElementById(id).innerText = valor;
       });
 
-      const equipos = localStorage.getItem("lista-equipos");
-      if (equipos) {
-        const lista = JSON.parse(equipos);
-        document.getElementById("lista-equipos").innerHTML =
-          lista.map(item => `<li>${item}</li>`).join("");
-      }
+      const equipos = JSON.parse(localStorage.getItem("lista-equipos"));
+      if (equipos) renderizarEquipos(equipos);
+      else renderizarEquipos([
+        "Rut xxxxxxxx",
+        "campbell cr 310 xxxxxxx",
+        "Conversor RS485 stm4855",
+        "batería 12V 18Ah",
+        "Controlador solar"
+      ]);
     };
 
+    function toggleModoEdicion() {
+      modoEdicion = !modoEdicion;
+      document.querySelectorAll(".edit-btn, .del-btn").forEach(btn =>
+        btn.classList.toggle("visible", modoEdicion)
+      );
+      document.getElementById("add-equipo-btn").style.display = modoEdicion ? "inline" : "none";
+    }
+
     function editarCampo(id) {
-      const elemento = document.getElementById(id);
-      const valorActual = elemento.innerText;
-      const nuevoValor = prompt("Editar valor:", valorActual);
-      if (nuevoValor !== null && nuevoValor.trim() !== "") {
-        elemento.innerText = nuevoValor;
+      const el = document.getElementById(id);
+      const nuevo = prompt("Editar valor:", el.innerText);
+      if (nuevo !== null && nuevo.trim() !== "") el.innerText = nuevo;
+    }
+
+    function renderizarEquipos(lista) {
+      const ul = document.getElementById("lista-equipos");
+      ul.innerHTML = "";
+      lista.forEach((texto, i) => {
+        const li = document.createElement("li");
+        li.innerHTML = `${texto}
+          <button class="edit-btn" onclick="editarEquipo(${i})">✏️</button>
+          <button class="del-btn" onclick="eliminarEquipo(${i})">🗑️</button>`;
+        ul.appendChild(li);
+      });
+
+      const liAdd = document.createElement("li");
+      liAdd.innerHTML = `<button id="add-equipo-btn" class="add-btn" onclick="agregarEquipo()" style="display:none;">➕ Agregar equipo</button>`;
+      ul.appendChild(liAdd);
+    }
+
+    function editarEquipo(index) {
+      const items = obtenerEquipos();
+      const nuevo = prompt("Editar equipo:", items[index]);
+      if (nuevo !== null && nuevo.trim() !== "") {
+        items[index] = nuevo;
+        renderizarEquipos(items);
       }
     }
 
-    function editarListaEquipos() {
-      const ul = document.getElementById("lista-equipos");
-      const actual = Array.from(ul.children).map(li => li.innerText).join(", ");
-      const nuevoTexto = prompt("Editar equipos separados por comas:", actual);
-      if (nuevoTexto !== null) {
-        const items = nuevoTexto.split(",").map(e => e.trim()).filter(e => e);
-        ul.innerHTML = items.map(item => `<li>${item}</li>`).join("");
+    function eliminarEquipo(index) {
+      if (confirm("¿Eliminar este equipo?")) {
+        const items = obtenerEquipos();
+        items.splice(index, 1);
+        renderizarEquipos(items);
       }
+    }
+
+    function agregarEquipo() {
+      const nuevo = prompt("Nuevo equipo:");
+      if (nuevo && nuevo.trim() !== "") {
+        const items = obtenerEquipos();
+        items.push(nuevo);
+        renderizarEquipos(items);
+      }
+    }
+
+    function obtenerEquipos() {
+      return Array.from(document.querySelectorAll("#lista-equipos li"))
+        .slice(0, -1) // Excluir botón Agregar
+        .map(li => li.childNodes[0].nodeValue.trim());
     }
 
     function guardarCambios() {
       const clave = prompt("Ingrese la contraseña para guardar los cambios:");
       if (clave !== "ceneris2020") {
-        alert("❌ Contraseña incorrecta. Cambios no guardados.");
+        alert("❌ Contraseña incorrecta.");
         return;
       }
 
-      const campos = ["nombre-plc", "numero-plc", "pakbus", "ultimo-mantenimiento"];
-      campos.forEach(id => {
-        const valor = document.getElementById(id).innerText;
-        localStorage.setItem(id, valor);
+      ["nombre-plc", "numero-plc", "pakbus", "ultimo-mantenimiento"].forEach(id => {
+        localStorage.setItem(id, document.getElementById(id).innerText);
       });
 
-      const equipos = Array.from(document.getElementById("lista-equipos").children)
-                          .map(li => li.innerText);
-      localStorage.setItem("lista-equipos", JSON.stringify(equipos));
+      localStorage.setItem("lista-equipos", JSON.stringify(obtenerEquipos()));
       alert("✅ Cambios guardados correctamente.");
     }
   </script>
 </head>
 <body>
 
-  <article class="card" role="group" aria-labelledby="title-atr">
-    <img
-      src="https://ceneris.com/wp-content/uploads/2021/05/logo-ceneris-300.png"
-      alt="Logo Empresa"
-      class="logo-empresa"
-    >
+<article class="card">
+  <img src="https://ceneris.com/wp-content/uploads/2021/05/logo-ceneris-300.png"
+       alt="Logo Empresa" class="logo-empresa" />
 
-    <!-- Encabezado -->
-    <div class="card-header">
-      <h1 id="nombre-plc">ATR-66 PLC</h1>
-      <button class="edit-btn" onclick="editarCampo('nombre-plc')" title="Editar nombre">✏️</button>
-      <span class="badge" id="numero-plc">959312882</span>
-      <button class="edit-btn" onclick="editarCampo('numero-plc')" title="Editar número">✏️</button>
-    </div>
+  <div class="card-header">
+    <h1 id="nombre-plc">ATR-66 PLC</h1>
+    <button class="edit-btn" onclick="editarCampo('nombre-plc')">✏️</button>
+    <span class="badge" id="numero-plc">959312882</span>
+    <button class="edit-btn" onclick="editarCampo('numero-plc')">✏️</button>
+  </div>
 
-    <!-- Contenido editable -->
-    <p class="label">
-      Último mantenimiento:
-      <span class="value success" id="ultimo-mantenimiento">15/06/2025</span>
-      <button class="edit-btn" onclick="editarCampo('ultimo-mantenimiento')" title="Editar fecha">✏️</button>
-    </p>
-    <p class="label">
-      PakBus:
-      <span class="value" id="pakbus">784</span>
-      <button class="edit-btn" onclick="editarCampo('pakbus')" title="Editar PakBus">✏️</button>
-    </p>
+  <p class="label">
+    Último mantenimiento:
+    <span class="value success" id="ultimo-mantenimiento">15/06/2025</span>
+    <button class="edit-btn" onclick="editarCampo('ultimo-mantenimiento')">✏️</button>
+  </p>
 
-    <hr />
-    <p class="label">
-      Equipos instalados:
-      <button class="edit-btn" onclick="editarListaEquipos()" title="Editar equipos">✏️</button>
-    </p>
-    <ul class="list" id="lista-equipos">
-      <li>Rut xxxxxxxx</li>
-      <li>campbell cr 310 xxxxxxx</li>
-      <li>Conversor RS485 stm4855</li>
-      <li>batería 12V 18Ah</li>
-      <li>Controlador solar</li>
-    </ul>
-    <hr />
+  <p class="label">
+    PakBus:
+    <span class="value" id="pakbus">784</span>
+    <button class="edit-btn" onclick="editarCampo('pakbus')">✏️</button>
+  </p>
 
-    <!-- Botones -->
-    <div class="card-footer">
-      <a href="https://ceneris-my.sharepoint.com/:u:/p/asistente_ti/ES0F-Cf63WFKjYcChE85sqoBa2a2qX-nrqV5sqSZ-etB-g?e=uFppDr" class="btn btn-primary" download>
-        <i class="fa-solid fa-file-contract"></i> Certificado
-      </a>
-      <a href="https://drive.google.com/file/d/15lV-xBULpVeQ8RBkv_-vvzUKGRkd3h8z/view?usp=drive_link" class="btn btn-outline" download>
-        <i class="fa-solid fa-diagram-project"></i> Diagrama
-      </a>
-      <a href="https://drive.google.com/file/d/1yGSwUXlh9M2MliIfeUhvZIHykBIajnDd/view?usp=drive_link" class="btn btn-outline" download>
-        <i class="fa-solid fa-book"></i> Manual
-      </a>
-      <a href="#" class="btn btn-outline" download>
-        <i class="fa-solid fa-gears"></i> Especificaciones
-      </a>
-    </div>
+  <hr />
+  <p class="label">Equipos instalados:</p>
+  <ul class="list" id="lista-equipos"></ul>
 
-    <!-- Botón Guardar -->
-    <button class="btn-save" onclick="guardarCambios()">💾 Guardar cambios</button>
+  <hr />
+  <div class="card-footer">
+    <a href="#" class="btn btn-primary"><i class="fa-solid fa-file-contract"></i> Certificado</a>
+    <a href="#" class="btn btn-outline"><i class="fa-solid fa-diagram-project"></i> Diagrama</a>
+    <a href="#" class="btn btn-outline"><i class="fa-solid fa-book"></i> Manual</a>
+    <a href="#" class="btn btn-outline"><i class="fa-solid fa-gears"></i> Especificaciones</a>
+  </div>
 
-  </article>
+  <button class="btn-toggle-edit" onclick="toggleModoEdicion()">✏️ Editar</button>
+  <button class="btn-save" onclick="guardarCambios()">💾 Guardar cambios</button>
+</article>
 
 </body>
 </html>
