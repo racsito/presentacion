@@ -6,6 +6,8 @@
   <title>ATR-66 PLC – Tarjeta</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Agregar SheetJS para exportar a Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --primary: #0d6efd;
@@ -135,7 +137,7 @@
     }
     .btn-outline:hover { background: var(--primary); color: #fff; }
 
-    .btn-save, .btn-toggle-edit {
+    .btn-save, .btn-toggle-edit, .btn-export {
       width: 100%;
       padding: 10px;
       font-weight: 600;
@@ -151,6 +153,16 @@
     .btn-toggle-edit { background: var(--primary); color: white; }
     .btn-toggle-edit:hover { filter: brightness(1.1); }
 
+    .btn-export { 
+      background: #4CAF50; 
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-export:hover { filter: brightness(1.1); }
+
     .add-btn {
       background: none;
       border: none;
@@ -159,6 +171,13 @@
       cursor: pointer;
       font-weight: bold;
       margin-top: 8px;
+    }
+
+    .additional-fields {
+      margin-bottom: 16px;
+    }
+    .additional-field {
+      margin-bottom: 8px;
     }
   </style>
 
@@ -188,6 +207,18 @@
         "Controlador solar"
       ]);
 
+      // Cargar campos adicionales
+      const camposAdicionales = JSON.parse(localStorage.getItem("campos-adicionales"));
+      if (camposAdicionales) {
+        renderizarCamposAdicionales(camposAdicionales);
+      } else {
+        // Campos por defecto
+        renderizarCamposAdicionales([
+          { nombre: "cota", valor: "1234 m" },
+          { nombre: "nivel", valor: "2" }
+        ]);
+      }
+
       // Cargar links
       for (let key in links) {
         const guardado = localStorage.getItem("link_" + key);
@@ -203,6 +234,7 @@
         btn.classList.toggle("visible", modoEdicion)
       );
       document.getElementById("add-equipo-btn").style.display = modoEdicion ? "inline" : "none";
+      document.getElementById("add-campo-btn").style.display = modoEdicion ? "inline" : "none";
 
       if (modoEdicion) {
         for (let key in links) {
@@ -279,6 +311,85 @@
         .map(li => li.childNodes[0].nodeValue.trim());
     }
 
+    function renderizarCamposAdicionales(campos) {
+      const container = document.getElementById("campos-adicionales");
+      container.innerHTML = "";
+      
+      campos.forEach((campo, index) => {
+        const div = document.createElement("div");
+        div.className = "additional-field";
+        div.innerHTML = `
+          <span class="label">${campo.nombre}:
+            <span class="value" id="campo-${index}-valor">${campo.valor}</span>
+            <button class="edit-btn" onclick="editarCampoAdicional(${index})">✏️</button>
+            <button class="del-btn" onclick="eliminarCampoAdicional(${index})">🗑️</button>
+          </span>
+        `;
+        container.appendChild(div);
+      });
+      
+      const addBtn = document.createElement("button");
+      addBtn.id = "add-campo-btn";
+      addBtn.className = "add-btn";
+      addBtn.style.display = "none";
+      addBtn.onclick = agregarCampoAdicional;
+      addBtn.textContent = "➕ Agregar campo";
+      container.appendChild(addBtn);
+    }
+
+    function editarCampoAdicional(index) {
+      const campos = obtenerCamposAdicionales();
+      const nuevoNombre = prompt("Editar nombre del campo:", campos[index].nombre);
+      if (nuevoNombre === null) return;
+      
+      const nuevoValor = prompt("Editar valor:", campos[index].valor);
+      if (nuevoValor === null) return;
+      
+      campos[index] = {
+        nombre: nuevoNombre || campos[index].nombre,
+        valor: nuevoValor || campos[index].valor
+      };
+      
+      renderizarCamposAdicionales(campos);
+    }
+
+    function eliminarCampoAdicional(index) {
+      if (confirm("¿Eliminar este campo?")) {
+        const campos = obtenerCamposAdicionales();
+        campos.splice(index, 1);
+        renderizarCamposAdicionales(campos);
+      }
+    }
+
+    function agregarCampoAdicional() {
+      const nombre = prompt("Nombre del nuevo campo:");
+      if (!nombre || nombre.trim() === "") return;
+      
+      const valor = prompt("Valor del campo:");
+      if (valor === null) return;
+      
+      const campos = obtenerCamposAdicionales();
+      campos.push({
+        nombre: nombre.trim(),
+        valor: valor || ""
+      });
+      
+      renderizarCamposAdicionales(campos);
+    }
+
+    function obtenerCamposAdicionales() {
+      const campos = [];
+      const elementos = document.querySelectorAll("#campos-adicionales .additional-field");
+      
+      elementos.forEach((el, index) => {
+        const nombre = el.querySelector(".label").textContent.split(":")[0];
+        const valor = document.getElementById(`campo-${index}-valor`).textContent;
+        campos.push({ nombre, valor });
+      });
+      
+      return campos;
+    }
+
     function guardarCambios() {
       const clave = prompt("Ingrese la contraseña para guardar los cambios:");
       if (clave !== "ceneris2020") {
@@ -291,12 +402,58 @@
       });
 
       localStorage.setItem("lista-equipos", JSON.stringify(obtenerEquipos()));
+      localStorage.setItem("campos-adicionales", JSON.stringify(obtenerCamposAdicionales()));
 
       for (let key in links) {
         localStorage.setItem("link_" + key, links[key]);
       }
 
       alert("✅ Cambios guardados correctamente.");
+    }
+
+    function exportarAExcel() {
+      // Obtener todos los datos
+      const nombrePLC = document.getElementById("nombre-plc").innerText;
+      const numeroPLC = document.getElementById("numero-plc").innerText;
+      const ultimoMantenimiento = document.getElementById("ultimo-mantenimiento").innerText;
+      const pakbus = document.getElementById("pakbus").innerText;
+      const equipos = obtenerEquipos();
+      const camposAdicionales = obtenerCamposAdicionales();
+      
+      // Preparar los datos para Excel
+      const datos = [
+        ["ATR", "Valor"], // Encabezados
+        ["Nombre PLC", nombrePLC],
+        ["Número PLC", numeroPLC],
+        ["Último mantenimiento", ultimoMantenimiento],
+        ["PakBus", pakbus],
+        ["", ""], // Espacio en blanco
+        ["Equipos instalados", ""]
+      ];
+      
+      // Agregar equipos
+      equipos.forEach(equipo => {
+        datos.push(["", equipo]);
+      });
+      
+      datos.push(["", ""]); // Espacio en blanco
+      datos.push(["Campos adicionales", ""]);
+      
+      // Agregar campos adicionales
+      camposAdicionales.forEach(campo => {
+        datos.push([campo.nombre, campo.valor]);
+      });
+      
+      // Crear hoja de trabajo
+      const ws = XLSX.utils.aoa_to_sheet(datos);
+      
+      // Crear libro de trabajo y agregar hoja
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Datos ATR");
+      
+      // Generar archivo Excel
+      const nombreArchivo = `${nombrePLC.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.xlsx`;
+      XLSX.writeFile(wb, nombreArchivo);
     }
   </script>
 </head>
@@ -311,6 +468,8 @@
     <span class="badge" id="numero-plc">959312882</span>
     <button class="edit-btn" onclick="editarCampo('numero-plc')">✏️</button>
   </div>
+
+  <div class="additional-fields" id="campos-adicionales"></div>
 
   <p class="label">Último mantenimiento:
     <span class="value success" id="ultimo-mantenimiento">15/06/2025</span>
@@ -336,6 +495,7 @@
 
   <button class="btn-toggle-edit" onclick="toggleModoEdicion()">✏️ Editar</button>
   <button class="btn-save" onclick="guardarCambios()">💾 Guardar cambios</button>
+  <button class="btn-export" onclick="exportarAExcel()"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
 </article>
 
 </body>
